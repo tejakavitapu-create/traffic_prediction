@@ -1,0 +1,27 @@
+{% extends 'base/main.html' %}
+{% block content %}
+{% load static %}
+
+<!-- Admin Login Form Start -->
+<div class="container-fluid vh-100 d-flex justify-content-center align-items-center" style="background-image: url('/static/img/traffic_bg.png'); background-size: cover; background-position: center;">
+    <div class="col-md-6 p-4 rounded" style="background-color: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+        <h2 class="text-center mb-4">Admin Login</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" class="form-control" id="username" name="username" placeholder="Enter your username">
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password">
+            </div>
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary">Login</button>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- Admin Login Form End -->
+
+{% endblock %}

@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "traffic_prediction",
+    "slug": "traffic_prediction",
+    "version": "1.0.0",
+    "sdkVersion": "54.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "android": {
+      "package": "com.anonymous.traffic_prediction"
+    }
+  }
+}

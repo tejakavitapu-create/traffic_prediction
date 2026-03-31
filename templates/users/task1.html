@@ -1,0 +1,111 @@
+{% extends 'users/userbase.html' %}
+{% block content %}
+{% load static %}
+
+<style>
+    /* Carousel container */
+    .carousel-header {
+        position: relative;
+        overflow: hidden;
+        height: 100vh;
+        background-color: #000;
+    }
+
+    /* Carousel image styling */
+    .carousel-inner img {
+        object-fit: cover;
+        width: 100%;
+        height: 100%;
+    }
+
+    /* Carousel caption */
+    .carousel-caption {
+        position: absolute;
+        bottom: 30px;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        color: #fff;
+    }
+
+    /* Custom text styles for carousel */
+    .carousel-caption h1 {
+        font-size: 3rem;
+        font-weight: bold;
+        letter-spacing: 5px;
+    }
+
+    .carousel-caption p {
+        font-size: 1.2rem;
+        line-height: 1.6;
+    }
+
+    /* Styling for the task details */
+    .task-details {
+        background-color: rgba(0, 0, 0, 0.7);
+        padding: 20px;
+        border-radius: 10px;
+    }
+
+    .task-details h1 {
+        color: brown;
+        font-size: 2.5rem;
+        text-transform: capitalize;
+    }
+
+    .task-details p {
+        font-size: 1.1rem;
+        color: white;
+    }
+
+    /* Add some spacing to the carousel */
+    .carousel-inner {
+        margin-top: 30px;
+    }
+
+    /* Styling for the metrics */
+    .task-details span.heading {
+        color: #ffcc00; /* Gold color for headings */
+        font-weight: bold;
+        font-size: 1.4rem;
+    }
+
+    .task-details span.value {
+        color: #00bfff; /* Light blue color for values */
+        font-size: 1.4rem;
+    }
+</style>
+
+<div class="container-fluid carousel-header vh-100 px-0">
+    <div id="carouselId" class="carousel slide" data-bs-ride="carousel">
+        <ol class="carousel-indicators">
+            <li data-bs-target="#carouselId" data-bs-slide-to="0" class="active"></li>
+            <li data-bs-target="#carouselId" data-bs-slide-to="1"></li>
+            <li data-bs-target="#carouselId" data-bs-slide-to="2"></li>
+        </ol>
+        <div class="carousel-inner" role="listbox">
+            <div class="carousel-item active">
+                <img src="{% static 'img/traffic_bg.png' %}" class="img-fluid w-100" style="object-fit: cover; height: 100vh;" alt="Image">
+                <div class="carousel-caption">
+                    <br><br>
+                    <div class="p-3" style="max-width: 900px;">
+                        <h4 class="text-white text-uppercase fw-bold mb-4" style="letter-spacing: 3px;">Result is </h4>
+                        <div class="task-details">
+                            <br><br>
+                            <h1 class="display-1 text-capitalize">
+                                Regression Evaluation for the project<br>
+                                <span class="heading">Mean Absolute Error:</span> <span class="value">{{mae}}</span><br>
+                                <span class="heading">Mean Squared Error:</span> <span class="value">{{mse}}</span><br>
+                                <span class="heading">R2 Score:</span> <span class="value">{{r2}}</span>
+                            </h1>
+                            <p class="mb-5 fs-5">Here are the results of Training, showing the performance metrics of the model trained for vehicle count prediction.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{error}}
+
+{% endblock %}

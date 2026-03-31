@@ -1,0 +1,70 @@
+{% extends 'admins/adminbase.html' %}
+{% block content %}
+{% load static %}
+
+    <!-- Carousel Start -->
+    <div class="container-fluid carousel-header vh-100 px-0">
+        <div id="carouselId" class="carousel slide" data-bs-ride="carousel">
+            <ol class="carousel-indicators">
+                <li data-bs-target="#carouselId" data-bs-slide-to="0" class="active"></li>
+                <li data-bs-target="#carouselId" data-bs-slide-to="1"></li>
+                <li data-bs-target="#carouselId" data-bs-slide-to="2"></li>
+            </ol>
+            <div class="carousel-inner" role="listbox">
+                <div class="carousel-item active">
+                    <img src="{% static 'img/traffic_bg.png' %}" class="img-fluid w-100" style="object-fit: cover; height: 100vh;" alt="Image">
+                    <div class="carousel-caption" style="background: rgba(0,0,0,0.5);">
+                        <div class="p-3" style="max-width: 900px;">
+                            <!-- Data Table Start -->
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover table-striped table-dark">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">ID</th>
+                                            <th scope="col">UserName</th>
+                                            <th scope="col">Email Address</th>
+                                            <th scope="col">Address</th>
+                                            <th scopr="col">Status</th>
+                                            <th scopr="col">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for user in users %}
+                                        <tr>
+                                            <th>{{ user.id }}</th>
+                                            <td>{{ user.username }}</td>
+                                            <td>{{ user.email }}</td>
+                                            <td>{{ user.address }}</td>
+                                            <td>  {% if user.is_active %}
+                                                    Activated
+                                                  {% else %}
+                                                    Waiting
+                                                  {% endif %}          
+                                            </td>
+                                            <td>
+                                                {% if user.is_active %}
+                                                    <a href="{% url 'userdeavtivate' user.pk %}" class="btn btn-danger">Deactivate</a>
+                                                {% else %}
+                                                    <a href="{% url 'useractivate' user.pk %}" class="btn btn-success">Activate</a>
+                                                {% endif %}
+                                            </td>
+
+                                        {% endfor %}
+                                         
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!-- Data Table End -->
+                        </div>
+                    </div>
+                </div>
+            </div>    
+        </div>
+    </div>
+    <!-- Carousel End -->
+
+
+
+   
+
+{% endblock %}

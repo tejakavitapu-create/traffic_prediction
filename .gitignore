@@ -1,0 +1,28 @@
+# Node.js
+node_modules/
+.expo/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+venv_new/
+*.env
+.vscode/
+
+# Django
+db.sqlite3
+media/
+static/staticfiles/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

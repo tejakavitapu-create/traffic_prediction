@@ -1,0 +1,497 @@
+{% extends 'users/userbase.html' %}
+{% block content %}
+{% load static %}
+
+<!-- Bootstrap 5 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- TomTom Maps SDK -->
+<link rel='stylesheet' type='text/css' href='https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.25.0/maps/maps.css'>
+<script src="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.25.0/maps/maps-web.min.js"></script>
+<script src="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.25.0/services/services-web.min.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="main-wrapper py-5 mt-5">
+    <div class="container py-5">
+        <!-- Main Header -->
+        <div class="text-center mb-5 fade-in">
+            <h1 class="display-4 fw-bold text-gradient">AI Traffic Intelligence</h1>
+            <p class="text-muted fs-5">Predicting urban mobility with deep learning and real-time mapping.</p>
+        </div>
+
+        <div class="row g-4">
+            <!-- Left Side: Input Configuration -->
+            <div class="col-lg-5 col-xl-4">
+                <div class="glass-card h-100 p-4 p-lg-5">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="icon-box me-3">
+                            <i class="fas fa-sliders-h text-primary"></i>
+                        </div>
+                        <h4 class="fw-bold mb-0 text-dark">Parameters</h4>
+                    </div>
+
+                    <form method="post" action="{% url 'predict_vehicles' %}" id="prediction-form">
+                        {% csrf_token %}
+                        <input type="hidden" id="lat" name="lat" value="{{ lat|default:'' }}">
+                        <input type="hidden" id="lon" name="lon" value="{{ lon|default:'' }}">
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="form-floating mb-2">
+                                    <input type="text" id="location" name="location" class="form-control"
+                                        placeholder="Search" value="{{ location_name|default:'' }}" required
+                                        autocomplete="off">
+                                    <label for="location"><i class="fas fa-search me-2 text-primary"></i>Location /
+                                        City</label>
+                                </div>
+                                <button class="btn btn-live-location w-100 mb-3" type="button" id="btn-get-location">
+                                    <i class="fas fa-location-crosshairs me-2"></i> Use Live Geolocation
+                                </button>
+                                <div id="location-loader" class="small text-center text-primary mb-3 d-none pulse">
+                                    <span class="spinner-border spinner-border-sm me-2"></span> Pinpointing Location...
+                                </div>
+                            </div>
+
+                            <div class="col-6">
+                                <div class="form-floating mb-3">
+                                    <input type="number" name="start_hour" class="form-control" min="0" max="23"
+                                        value="9" required>
+                                    <label>Start Hour</label>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-floating mb-3">
+                                    <input type="number" name="end_hour" class="form-control" min="0" max="23"
+                                        value="18" required>
+                                    <label>End Hour</label>
+                                </div>
+                            </div>
+
+                            <div class="col-6">
+                                <div class="form-floating mb-3">
+                                    <input type="number" name="start_month" class="form-control" min="1" max="12"
+                                        value="3" required>
+                                    <label>Month</label>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-floating mb-3">
+                                    <input type="number" name="start_year" class="form-control" min="2020" max="2030"
+                                        value="2026" required>
+                                    <label>Year</label>
+                                    <input type="hidden" name="end_month" value="3">
+                                    <input type="hidden" name="end_year" value="2026">
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-floating mb-3">
+                                    <select name="start_week_day" class="form-select">
+                                        <option value="monday">Monday</option>
+                                        <option value="tuesday">Tuesday</option>
+                                        <option value="wednesday">Wednesday</option>
+                                        <option value="thursday">Thursday</option>
+                                        <option value="friday">Friday</option>
+                                        <option value="saturday">Saturday</option>
+                                        <option value="sunday">Sunday</option>
+                                    </select>
+                                    <label>Weekday</label>
+                                    <input type="hidden" name="end_week_day" value="monday">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-generate w-100 py-3 mt-3 fw-bold">
+                            <i class="fas fa-brain me-2"></i> Analyze Traffic
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Side: Separate Map Card -->
+            <div class="col-lg-7 col-xl-8">
+                <div class="glass-card h-100 overflow-hidden d-flex flex-column">
+                    <div
+                        class="p-4 bg-white bg-opacity-50 border-bottom d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-box me-3">
+                                <i class="fas fa-map-marked-alt text-primary"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-0 text-dark">Traffic Visualizer</h5>
+                                <small class="text-muted">Live congestion & infrastructure map</small>
+                            </div>
+                        </div>
+                        <div class="map-controls">
+                            <span
+                                class="badge bg-success-subtle text-success border border-success border-opacity-25 px-3 py-2 rounded-pill">
+                                <i class="fas fa-circle-dot me-1 small pulse"></i> TomTom Engine Active
+                            </span>
+                        </div>
+                    </div>
+                    <!-- Separate Map Container -->
+                    <div id="map" class="flex-grow-1" style="min-height: 500px; width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prediction Summary & Logic Section -->
+        {% if predictions %}
+        <div class="row g-4 mt-2">
+            <!-- Traffic Status Level (GREEN/YELLOW/RED) -->
+            <div class="col-lg-4">
+                <div class="glass-card p-4 p-lg-5 h-100 text-center fade-in">
+                    <h5 class="text-muted text-uppercase letter-spacing-2 mb-4">Current Peak Level</h5>
+
+                    <div class="status-circle-wrapper mb-4">
+                        {% if mark == 'Green' %}
+                        <div class="status-main-circle border-success">
+                            <i class="fas fa-check-circle text-success display-2"></i>
+                            <span class="h2 fw-bold text-success mt-3 d-block">LOW</span>
+                        </div>
+                        <p class="mt-4 text-muted px-3">Traffic flow is optimal. No significant delays expected in the
+                            {{ location_name }} area.</p>
+                        {% elif mark == 'Yellow' %}
+                        <div class="status-main-circle border-warning">
+                            <i class="fas fa-exclamation-circle text-warning display-2"></i>
+                            <span class="h2 fw-bold text-warning-emphasis mt-3 d-block">MODERATE</span>
+                        </div>
+                        <p class="mt-4 text-muted px-3">Expected moderate density. Slight delays possible near major
+                            junctions in {{ location_name }}.</p>
+                        {% else %}
+                        <div class="status-main-circle border-danger">
+                            <i class="fas fa-triangle-exclamation text-danger display-2"></i>
+                            <span class="h2 fw-bold text-danger mt-3 d-block">HEAVY</span>
+                        </div>
+                        <p class="mt-4 text-muted px-3">High congestion alert. Significant delays forecasted for {{
+                            location_name }}. Planning alternate routes advised.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prediction Details Card -->
+            <div class="col-lg-8">
+                <div class="glass-card p-4 p-lg-5 h-100 fade-in" style="animation-delay: 0.2s;">
+                    <div class="row align-items-center mb-5">
+                        <div class="col-md-7">
+                            <h3 class="fw-bold text-dark mb-1">Density Analysis</h3>
+                            <p class="text-muted">Advanced vehicle count forecasting for <strong>{{ location_name
+                                    }}</strong></p>
+                        </div>
+                        <div class="col-md-5 text-md-end">
+                            <div class="accuracy-pill p-3 border rounded-4 bg-white bg-opacity-50">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small class="text-muted fw-bold">Prediction Level</small>
+                                    <small class="text-primary fw-bold">{{ prediction_level }}%</small>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-primary" role="progressbar"
+                                        style="width: {{ prediction_level }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4 mb-5">
+                        <div class="col-md-6">
+                            <div class="result-box p-4 rounded-4 border border-light shadow-sm text-center bg-white">
+                                <div class="text-muted mb-2"><i class="fas fa-clock me-2"></i>Start Hour Prediction
+                                </div>
+                                <div class="display-6 fw-bold text-dark">{{ predictions.0 }}</div>
+                                <div class="text-muted small mt-1">vph (vehicles per hour)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="result-box p-4 rounded-4 border border-light shadow-sm text-center bg-white">
+                                <div class="text-muted mb-2"><i class="fas fa-clock-rotate-left me-2"></i>End Hour
+                                    Prediction</div>
+                                <div class="display-6 fw-bold text-dark">{{ predictions.1 }}</div>
+                                <div class="text-muted small mt-1">vph (vehicles per hour)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trend Chart Inside This Row -->
+                    <div class="chart-box p-4 rounded-4 bg-light border border-light-subtle">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-chart-line me-2 text-primary"></i>Hourly
+                                Vehicle Trend</h6>
+                            <span class="badge bg-white text-dark shadow-sm px-3 rounded-pill border">{{ location_name
+                                }}</span>
+                        </div>
+                        <div style="height: 250px;">
+                            <canvas id="trafficChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary: #4361ee;
+        --secondary: #3f37c9;
+        --accent: #4cc9f0;
+        --glass-bg: rgba(255, 255, 255, 0.9);
+        --glass-border: rgba(255, 255, 255, 0.5);
+    }
+
+    body {
+        font-family: 'Outfit', sans-serif;
+        background: #f1f4f9;
+        color: #2b3445;
+        overflow-x: hidden;
+    }
+
+    .main-wrapper {
+        background: radial-gradient(circle at 0% 0%, rgba(67, 97, 238, 0.03) 0%, transparent 50%),
+            radial-gradient(circle at 100% 100%, rgba(76, 201, 240, 0.03) 0%, transparent 50%);
+    }
+
+    .glass-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: 32px;
+        box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s ease;
+    }
+
+    .icon-box {
+        width: 48px;
+        height: 48px;
+        background: rgba(67, 97, 238, 0.1);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .text-gradient {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .form-floating>.form-control {
+        border-radius: 16px;
+        background: #f8fafc;
+        border: 1.5px solid #e2e8f0;
+        font-weight: 500;
+    }
+
+    .form-floating>.form-control:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1);
+    }
+
+    .btn-live-location {
+        background: #fff;
+        border: 1.5px solid var(--primary);
+        border-radius: 16px;
+        color: var(--primary);
+        font-weight: 600;
+        padding: 0.8rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-live-location:hover {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-generate {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        border: none;
+        border-radius: 18px;
+        transition: all 0.4s ease;
+    }
+
+    .btn-generate:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 30px rgba(67, 97, 238, 0.3);
+    }
+
+    .status-main-circle {
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        margin: 0 auto;
+        border: 10px solid;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    }
+
+    #map {
+        background: #eef2f7;
+    }
+
+    .fade-in {
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .pulse {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.5;
+        }
+
+        100% {
+            opacity: 1;
+        }
+    }
+</style>
+
+<script>
+    const API_KEY = '{{ tomtom_api_key }}';
+    let map, marker;
+
+    function initMap() {
+        const initialLat = parseFloat('{{ lat|default:17.3850 }}');
+        const initialLon = parseFloat('{{ lon|default:78.4867 }}');
+
+        map = tt.map({
+            key: API_KEY,
+            container: 'map',
+            center: [initialLon, initialLat],
+            zoom: 12,
+            stylesVisibility: { trafficFlow: true, trafficIncidents: true }
+        });
+
+        map.addControl(new tt.NavigationControl());
+        marker = new tt.Marker().setLngLat([initialLon, initialLat]).addTo(map);
+
+        if ('{{ predictions }}') {
+            map.flyTo({ center: [initialLon, initialLat], zoom: 15 });
+            
+            // Draw a route from the location to a simulated destination junction
+            // to showcase the routing and congestion capabilities based on API
+            map.on('load', function() {
+                var destLon = initialLon + 0.03;
+                var destLat = initialLat + 0.03;
+                
+                // Add a destination marker
+                new tt.Marker({color: '#ef4444'}).setLngLat([destLon, destLat]).addTo(map);
+                
+                tt.services.calculateRoute({
+                    key: API_KEY,
+                    traffic: true,
+                    locations: `${initialLon},${initialLat}:${destLon},${destLat}`
+                }).then(function(response) {
+                    var geojson = response.toGeoJson();
+                    if (map.getSource('route')) {
+                        map.getSource('route').setData(geojson);
+                    } else {
+                        map.addLayer({
+                            'id': 'route',
+                            'type': 'line',
+                            'source': {
+                                'type': 'geojson',
+                                'data': geojson
+                            },
+                            'paint': {
+                                'line-color': '#4a90e2',
+                                'line-width': 6
+                            }
+                        });
+                    }
+                    
+                    var bounds = new tt.LngLatBounds();
+                    geojson.features[0].geometry.coordinates.forEach(function(point) {
+                        bounds.extend(tt.LngLat.convert(point));
+                    });
+                    map.fitBounds(bounds, { padding: 50 });
+                });
+            });
+        }
+    }
+
+    // Chart logic
+    {% if chart_data %}
+    const ctx = document.getElementById('trafficChart').getContext('2d');
+    const color = '{{ mark }}' === 'Red' ? '#ef4444' : ('{{ mark }}' === 'Yellow' ? '#f59e0b' : '#10b981');
+    const chartGradient = ctx.createLinearGradient(0, 0, 0, 250);
+    chartGradient.addColorStop(0, color + '44');
+    chartGradient.addColorStop(1, color + '00');
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_labels| safe }},
+        datasets: [{
+            data: {{ chart_data| safe }},
+        borderColor: color,
+        backgroundColor: chartGradient,
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: color
+            }]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { grid: { color: 'rgba(0,0,0,0.03)' }, beginAtZero: true },
+            x: { grid: { display: false } }
+        }
+    }
+    });
+    {% endif %}
+
+    document.getElementById('btn-get-location').addEventListener('click', function () {
+        const loader = document.getElementById('location-loader');
+        if (!navigator.geolocation) return;
+        loader.classList.remove('d-none');
+
+        navigator.geolocation.getCurrentPosition((pos) => {
+            const lat = pos.coords.latitude; const lon = pos.coords.longitude;
+            document.getElementById('lat').value = lat; document.getElementById('lon').value = lon;
+            map.flyTo({ center: [lon, lat], zoom: 14 }); marker.setLngLat([lon, lat]);
+            tt.services.reverseGeocode({ key: API_KEY, position: [lon, lat] }).then(res => {
+                document.getElementById('location').value = res.addresses[0].address.freeformAddress || "Detected Location";
+                loader.classList.add('d-none');
+            });
+        }, () => loader.classList.add('d-none'));
+    });
+
+    window.onload = initMap;
+</script>
+
+{% endblock %}

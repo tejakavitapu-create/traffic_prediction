@@ -1,0 +1,111 @@
+{% extends 'users/userbase.html' %}
+
+{% block content %}
+<div class="container-fluid py-5 bg-light min-vh-100" style="margin-top: 50px;">
+    <div class="container pt-5">
+        <div class="text-center mx-auto mb-5" style="max-width: 600px;">
+            <h1 class="display-4 mb-3 text-dark">Model Performance</h1>
+            <p class="lead text-muted">Predictive accuracy metrics and variance charting.</p>
+        </div>
+
+        <div class="row justify-content-center mb-5">
+            <div class="col-lg-8">
+                <!-- Custom Prediction Form -->
+                <div class="card shadow-sm border-0 rounded-3 mb-4">
+                    <div class="card-body p-4 text-start">
+                        <h5 class="text-uppercase text-dark fw-bold mb-4 text-center">Custom Traffic Prediction</h5>
+                        <form method="POST" class="row g-3">
+                            {% csrf_token %}
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small fw-bold">Source Lat</label>
+                                <input type="number" step="any" name="source_lat" class="form-control" value="{{ custom_input.source_lat|default:'17.3850' }}" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small fw-bold">Source Lng</label>
+                                <input type="number" step="any" name="source_lng" class="form-control" value="{{ custom_input.source_lng|default:'78.4867' }}" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small fw-bold">Dest Lat</label>
+                                <input type="number" step="any" name="dest_lat" class="form-control" value="{{ custom_input.dest_lat|default:'16.5062' }}" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small fw-bold">Dest Lng</label>
+                                <input type="number" step="any" name="dest_lng" class="form-control" value="{{ custom_input.dest_lng|default:'80.6480' }}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small fw-bold">Distance (km)</label>
+                                <input type="number" step="any" name="distance_km" class="form-control" value="{{ custom_input.distance_km|default:'300' }}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small fw-bold">Avg Speed (km/h)</label>
+                                <input type="number" step="any" name="avg_speed_kmph" class="form-control" value="{{ custom_input.avg_speed_kmph|default:'60' }}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small fw-bold">ETA (minutes)</label>
+                                <input type="number" step="any" name="eta_minutes" class="form-control" value="{{ custom_input.eta_minutes|default:'300' }}" required>
+                            </div>
+                            <div class="col-12 text-center mt-4">
+                                <button type="submit" class="btn btn-primary px-5 py-2 fw-bold"><i class="fas fa-brain me-2"></i>Predict Congestion</button>
+                            </div>
+                        </form>
+                        
+                        {% if custom_prediction %}
+                        <div class="mt-4 p-3 bg-primary bg-opacity-10 rounded text-center border border-primary">
+                            <h5 class="text-dark mb-1">Predicted Congestion Score</h5>
+                            <h2 class="text-primary fw-bold mb-0">{{ custom_prediction }}</h2>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Metrics Card -->
+                <div class="card shadow-lg border-0 rounded-3">
+                    <div class="card-body p-4 text-center">
+                        <div class="row align-items-center">
+                            <div class="col-sm-4 mb-3 mb-sm-0">
+                                <h6 class="text-uppercase text-muted fw-bold mb-2">Mean Absolute</h6>
+                                <h3 class="text-primary fw-bold mb-0" style="font-size: 1.8rem;">{{ mae|floatformat:2 }}</h3>
+                            </div>
+                            <div class="col-sm-4 border-start border-end mb-3 mb-sm-0">
+                                <h6 class="text-uppercase text-muted fw-bold mb-2">Mean Squared</h6>
+                                <h3 class="text-primary fw-bold mb-0" style="font-size: 1.8rem;">{{ mse|floatformat:2 }}</h3>
+                            </div>
+                            <div class="col-sm-4">
+                                <h6 class="text-uppercase text-muted fw-bold mb-2">R² Score</h6>
+                                <h3 class="text-success fw-bold mb-0" style="font-size: 1.8rem;">{{ r2|floatformat:4 }}</h3>
+                            </div>
+                        </div>
+                        {% if error %}
+                        <div class="alert alert-danger mt-4 mb-0 rounded-3 border-0">{{ error }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if graph1 and graph2 %}
+        <div class="row g-5 justify-content-center">
+            <div class="col-xl-10">
+                <div class="card shadow-sm border-0 mb-5 rounded-3 overflow-hidden">
+                    <div class="card-header bg-white py-3 border-bottom-0">
+                        <h4 class="m-0 text-dark text-center fw-bold">Actual vs Predicted Trend</h4>
+                    </div>
+                    <div class="card-body p-1 bg-white text-center">
+                        <img src="data:image/png;base64,{{ graph1 }}" class="img-fluid" alt="Actual vs Predicted">
+                    </div>
+                </div>
+                
+                <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+                    <div class="card-header bg-white py-3 border-bottom-0">
+                        <h4 class="m-0 text-dark text-center fw-bold">Residual Variance</h4>
+                    </div>
+                    <div class="card-body p-1 bg-white text-center">
+                        <img src="data:image/png;base64,{{ graph2 }}" class="img-fluid" alt="Residuals Plot">
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
