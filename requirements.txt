@@ -4,3 +4,5 @@ requests
 pandas==2.2.3
 joblib==1.4.2
 urllib3==2.4.0
+gunicorn
+whitenoise
